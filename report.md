@@ -131,3 +131,79 @@
 - 本人検収で通らないときの観察のしどころ: (a) exact alarm の許可が無いと非 exact になり、時刻がずれうる(一覧の上に案内が出る)。(b) 通知の許可を拒否すると通知は出ない。(c) メーカー独自の省電力でアプリが止められると、発火が遅れうる。
 - lint の警告 16 件(エラー 0)。M1 の 13 件に加え、M2 で `InlinedApi`(`POST_NOTIFICATIONS` の定数。定数はコンパイル時に埋め込まれるので実害なし)2 件と `UseKtx` 1 件が増えた。
 - 将来(SPEC §9): 期限切れの扱い、繰り返し、夜間の音なし設定は未実装のまま。
+
+---
+
+# M3 報告
+
+## 仮定(冒頭に列挙)
+
+1. 指示の簡体字表は「114字」とあるが、貼られた表の実数は 115 字(重複なし)だった。表は貼られたとおり 115 字を全部使った(字を減らしてはいない)。字数の記述との食い違いは検収側で確認してほしい。
+2. 検出行の出力は `file:line: U+XXXX` とし、文字そのものは出さない(ログや報告に簡体字を再び混ぜないため)。
+3. 走査の対象は、拡張子 `.kt` `.kts` `.md` `.xml` `.yml` `.properties` `.toml` `.golden` のファイル。除外は `.git`、`build`、`.gradle` のディレクトリとスクリプト自身のみ。文字コードが UTF-8 でないファイルと読めないファイルは読み飛ばす。それ以外(`.idea/` など)は走査対象。
+4. CI の step は gradle の前(`setup-gradle` の直前)に置いた。実行は `python3 scripts/check_text.py`(runner の標準の python3 を使う)。
+5. ローカルの `main` には、検収済みの `effa71a` の上に未 push の `cb58cae`(CI の action を v5 に上げた1本)がある。M3 のコミットはその上に載る(`push` は本人が行うので、このとき両方が送られる)。
+6. このコミット自身のハッシュは、コミットに含まれる本書には書けない(自己参照になる)。コミット文言は「M3: versionName 0.1 and CI text scan」。`git log --oneline -1` の出力は、作業完了時の私の返答に貼る。
+7. 実装中に、`\uXXXX` と書いた表が書き込みの過程で文字に展開され、スクリプトのソースに簡体字そのものが入っていたのを見つけた。コードポイントから `\uXXXX` を組み立てて書き直し、ソースの表の行が ASCII だけであることを確認した。
+
+## 実施日
+
+2026-11-27
+
+## 完了条件の照合
+
+1. `./gradlew clean assembleDebug lint testDebugUnitTest` → `BUILD SUCCESSFUL`、終了コード 0。テストは 73 件のまま(増減なし)。lint は 16 件(すべて警告、エラー 0)で M2 から変化なし。
+2. `versionName` → `app/build.gradle.kts` の該当行:
+
+   ```
+   18:        versionCode = 1
+   19:        versionName = "0.1"
+   ```
+
+3. `scripts/check_text.py` が `repo` 全体で簡体字 0 → `ok: no simplified characters`、終了コード 0。
+   検出能力の確認: 表の1字(U+4E1A)を3行目に含む一時ファイル `probe_tmp.md` を `repo` 直下に作って実行した。出力は次のとおり。一時ファイルは削除し、削除後の再実行は終了コード 0 に戻ることも確認した。
+
+   ```
+   probe_tmp.md:3: U+4E1A
+   simplified characters found: 1 line(s)
+   exit=1
+   ```
+
+4. ci.yml の文言検査の step(`.github/workflows/ci.yml` の10〜19行目):
+
+   ```
+       steps:
+         - uses: actions/checkout@v5
+         - uses: actions/setup-java@v5
+           with:
+             distribution: temurin
+             java-version: 21
+         - name: text scan (simplified characters must be zero)
+           run: python3 scripts/check_text.py
+         - uses: gradle/actions/setup-gradle@v5
+         - name: lint and unit tests
+           run: ./gradlew lint testDebugUnitTest
+   ```
+
+5. 本書。
+6. コミットを1本打つ(仮定 6 を参照)。
+
+### 検査ポイント
+
+- スクリプトの表: `scripts/check_text.py` の `SIMPLIFIED` は `\uXXXX` エスケープだけで書いてある(該当の行に ASCII 以外の文字が無いことを `grep -P '[^\x00-\x7F]'` で確認済み。ASCII 以外が残るのは日本語の説明コメントの行だけ)。
+- 文言検査は `gradle` のテストには入れていない(CI の step のみ)。
+- `docs/SPEC.md`、`CLAUDE.md`、機能、`UI`、テストには触れていない。
+
+## テスト数
+
+総数 73(M2 から増減なし)。内訳は M2 の表のとおり(`TaskOrderingTest` 8、`TaskDaoTest` 9、`TaskRepositoryTest` 10、`JstTimeTest` 4、`NextFireTest` 17、`NotificationTextGoldenTest` 4、`NotificationPermissionTest` 3、`NotifyFlowTest` 18)。
+
+## 仮定
+
+冒頭の 1〜7 を参照。
+
+## 申し送り
+
+- 検査表は検収側の正本の複製で、本スクリプトに固定している。正本が変わったら `SIMPLIFIED` を差し替える。
+- 機密語 0(SPEC §7)の検査は、検査語の定義が無いので引き続き未搭載。
+- `versionName` を上げたのは表示だけ。`versionCode` は 1 のまま(指示どおり)。

@@ -13,6 +13,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - name: text scan (simplified characters must be zero)
+        run: python3 scripts/check_text.py
       - uses: gradle/actions/setup-gradle@v5
       - name: lint and unit tests
         run: ./gradlew lint testDebugUnitTest
