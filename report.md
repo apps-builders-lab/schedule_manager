@@ -217,3 +217,71 @@
   - `lint and unit tests`: 成功。
 - 注釈(annotations): 0 件。action を v5 に上げる前の run `45973015768` に出ていた2件(Node.js 20 の非推奨、`setup-java` v4 の非推奨)は消えた。確認は GitHub API の check-run の annotations 取得による(結果は空)。
 - 参考: 上の run `45973015768`(M1/M2 のコミット `effa71a`)も成功(3m9s)だった。
+
+---
+
+# M3.1 報告
+
+## 仮定(冒頭に列挙)
+
+1. 変更は `scripts/check_text.py` の2か所だけ(`SIMPLIFIED` から U+4EE4 の1字を削る、`SIMPLIFIED = SIMPLIFIED = (` の二重代入を1つにする)。gradle、テスト、機能、`UI`、docs/SPEC.md、`CLAUDE.md` には触れていない。
+2. 二重代入は、M3 で表を ASCII のエスケープに書き直した際に私が作り込んだもの(動作には影響しないが、誤りだった)。今回直した。
+3. 検収側の正本の字数(114)に合わせた。M3 の仮定1で指摘した「115字」は、令(U+4EE4)が1字余分だったためと確認された。
+4. 今回は gradle を回していない(`scripts/` と `report.md` だけの変更で、ビルドとテストの入力に含まれないため)。テストは 73 件のまま。
+5. このコミット自身のハッシュは本書に書けない(自己参照になる)。コミット文言は「M3.1: remove non-simplified char from text scan table」。`git log --oneline -1` の出力は、作業完了時の私の返答に貼る。
+
+## 実施日
+
+2026-11-27
+
+## 完了条件の照合
+
+1. 表が 114 字: `import` して数えた結果は、要素 114・重複なし・U+4EE4 を含まない(`entries 114 unique 114 has_ling(U+4EE4): False`)。差分は次の2行のみ。
+
+   ```
+   -SIMPLIFIED = SIMPLIFIED = (
+   +SIMPLIFIED = (
+   -    "(U+4E66 U+4E70 U+4ECE U+4EE4 U+4EEC U+4F18 を並べた行)"
+   +    "(上から U+4EE4 だけを除いた行)"
+   ```
+
+   (差分の表示は、スクリプトのソースにある `\uXXXX` 表記の行を、本書では `U+XXXX` で言い換えたもの。)
+
+2. `python3 scripts/check_text.py` が `repo` 全体で exit 0:
+
+   ```
+   ok: no simplified characters
+   exit=0
+   ```
+
+3. 一時ファイルでの確認(どちらも確認後に削除し、削除後に再実行して exit 0 を確認した)。
+   - 「命令」(U+547D U+4EE4)を含む一時ファイル → 検出されない:
+
+     ```
+     ok: no simplified characters
+     exit=0
+     ```
+
+   - 表の字(U+4E1A)を3行目に含む一時ファイル → 従来どおり検出:
+
+     ```
+     probe_tmp_b.md:3: U+4E1A
+     simplified characters found: 1 line(s)
+     exit=1
+     ```
+
+4. 本書。
+5. コミットを1本打つ(仮定 5 を参照)。
+
+## テスト数
+
+総数 73(M3 から増減なし。変更は `scripts/` と `report.md` のみ)。
+
+## 仮定
+
+冒頭の 1〜5 を参照。
+
+## 申し送り
+
+- 検査表は、検収側の正本(114字)と一致した。以後、正本が変わったら `SIMPLIFIED` を差し替える。
+- ステージ済みのまま残っている `scripts/__pycache__/check_text.cpython-314.pyc`(M3 の作業中に生成)は、引き続きコミットに含めていない。今回は `PYTHONDONTWRITEBYTECODE` を付けて実行し、新しい `.pyc` は作っていない。

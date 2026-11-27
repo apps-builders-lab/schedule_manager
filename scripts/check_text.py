@@ -8,9 +8,9 @@ import os
 import sys
 
 # 検収側の正本の複製。
-SIMPLIFIED = SIMPLIFIED = (
+SIMPLIFIED = (
     "\u4E1A \u4E1C \u4E3A \u4E49 \u4E50 \u4E60 "
-    "\u4E66 \u4E70 \u4ECE \u4EE4 \u4EEC \u4F18 "
+    "\u4E66 \u4E70 \u4ECE \u4EEC \u4F18 "
     "\u5173 \u51B3 \u51B5 \u521B \u52A8 \u52BF "
     "\u5355 \u5356 \u5386 \u53D1 \u53D8 \u56FE "
     "\u5706 \u573A \u5904 \u5907 \u591F \u5B83 "
