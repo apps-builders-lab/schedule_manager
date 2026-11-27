@@ -207,3 +207,13 @@
 - 検査表は検収側の正本の複製で、本スクリプトに固定している。正本が変わったら `SIMPLIFIED` を差し替える。
 - 機密語 0(SPEC §7)の検査は、検査語の定義が無いので引き続き未搭載。
 - `versionName` を上げたのは表示だけ。`versionCode` は 1 のまま(指示どおり)。
+
+## CI の結果(push 後の確認)
+
+2026-11-27 に `main` へ push(`effa71a..30624e6`。`cb58cae` と M3 の2コミット)したあとの GitHub Actions の結果。
+
+- run `45974639826`(M3 のコミットの push): 成功。`check` ジョブは 1m37s で完了し、全ステップが成功した。
+  - `text scan (simplified characters must be zero)`: 成功(文言検査が CI で動くことを確認)。
+  - `lint and unit tests`: 成功。
+- 注釈(annotations): 0 件。action を v5 に上げる前の run `45973015768` に出ていた2件(Node.js 20 の非推奨、`setup-java` v4 の非推奨)は消えた。確認は GitHub API の check-run の annotations 取得による(結果は空)。
+- 参考: 上の run `45973015768`(M1/M2 のコミット `effa71a`)も成功(3m9s)だった。
